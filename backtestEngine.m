@@ -182,7 +182,7 @@ classdef backtestEngine
             obj.InitialPortfolioValue = value;
         end
         
-        function obj = runBacktest(obj, pricesTT, varargin)
+        function obj = runBacktest(obj, hurdleTT, pricesTT, varargin)
             % Run backtest.
             %
             % Syntax:
@@ -258,6 +258,9 @@ classdef backtestEngine
             %  After completing the backtest, the results are stored in
             %  several properties.  See the help for backtestEngine and
             %  backtestStrategy for more details.
+            
+            % Hurdle Position:
+            hurdlePosition = cumprod(1 + hurdleTT.SP500);
             
             % Verify we have a valid prices timetable
             if ~isa(pricesTT,'timetable')
@@ -362,6 +365,9 @@ classdef backtestEngine
                 StartPortfolioValue_withupdate = obj.InitialPortfolioValue;
 
                 updatelastposition = obj.InitialPortfolioValue;
+                
+                % Initialize Hurdle Position
+                prevHurdlePosition = 0;
 
                 % Set initial positions
              
@@ -400,6 +406,17 @@ classdef backtestEngine
                     Rebalance_anchor = 0;
                 end
                 
+                % Initialize HurdleFee
+                numHurdleFee = length(strategies(i).HurdleFeeDate);
+                PrevHurdleFeeDate = pricesTT.Time(1);
+                if ~isempty(strategies(i).HurdleFeeDate)
+                    NextHurdleFeeDate = strategies(i).HurdleFeeDate(1);
+                    HurdleFee_anchor = 1;
+                else
+                    NextHurdleFeeDate = datestr(1);
+                    HurdleFee_anchor = 0;
+                end
+                
                 %%% Initiate Fees
                 % Initialize ManagementFee
                 MFeePaid = 0;                
@@ -428,6 +445,9 @@ classdef backtestEngine
                 
                 % Boolean highwatermark
                 Bool_HighWatermark = strategies(i).HighWatermark;
+                
+                % Boolean Hurdle
+                boolHurdle = strategies(i).Hurdle;
                 
                 % Initialize Transaction_value from Transaction Table
                 if isempty(Transaction)
@@ -571,11 +591,22 @@ classdef backtestEngine
                     end
 
                     % Calculate Hurdle Rate
-                    if mod(btIdx, strategies(i).HurdleFeeFreq) == 0
-                        eodMktVal = eodPortValue;
-                        boolHurdle = strategies(i).Hurdle;
-                        [AboveHurdleCost, UpdateLastPosition] = strategies(i).computePerformanceCost(boolHurdle, eodMktVal, updatelastposition);
-                        updatelastposition = UpdateLastPosition;
+                    if pricesTT.Time(btIdx) == NextHurdleFeeDate
+                        eodMktVal = sum(eodPositions(2:end));
+                        % boolHurdle = strategies(i).Hurdle;
+                        if boolHurdle
+                            currentHurdlePosition = hurdlePosition(btIdx);
+                            [AboveHurdleCost, HurdleHighWatermark, UpdateLastPosition, HurdlePosition] = computePerformanceCost(obj, updatehighwatermark, prevHurdlePosition, currentHurdlePosition, updatelastposition, eodMktVal);
+                            prevHurdlePosition = HurdlePosition;
+                            updatelastposition = UpdateLastPosition;
+                            updatehighwatermark = HurdleHighWatermark;
+                 
+                            if HurdleFee_anchor < numHurdleFee
+                                HurdleFee_anchor = HurdleFee_anchor + 1;
+                                NextHurdleFeeDate = strategies(i).HurdleFeeDate(HurdleFee_anchor);
+                        
+                            end
+                        end
                     end
                     
                     fee.(strategies(i).Name)(btIdx,4) = IncentiveFee + MFee + AboveHurdleCost;

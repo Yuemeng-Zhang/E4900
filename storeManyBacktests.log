@@ -1,0 +1,30 @@
+----------------------Begining storeManyBacktests.mlx 18-Nov-2020 08:27:20]
+----------------------Begining storeManyBacktests.mlx 18-Nov-2020 08:32:11]
+ERROR! RETURNS DATA MISSING FOR cash,overdraft
+FATAL ERROR in MATLAB:badsubscript! Array indices must be positive integers or logical values.
+----------------------Begining storeManyBacktests.mlx 18-Nov-2020 08:34:51]
+ERROR! RETURNS DATA MISSING FOR cash,overdraft
+FATAL ERROR in MATLAB:badsubscript! Array indices must be positive integers or logical values.
+MISSING ID in goldac3 | cash, overdraft, vmfxx
+ERROR! RETURNS DATA MISSING FOR cash,overdraft,vmfxx
+FATAL ERROR in MATLAB:badsubscript! Array indices must be positive integers or logical values.
+----------------------Begining storeManyBacktests.mlx 18-Nov-2020 08:35:48]
+ERROR! RETURNS DATA MISSING FOR cash,overdraft
+FATAL ERROR in MATLAB:badsubscript! Array indices must be positive integers or logical values.
+----------------------Begining storeManyBacktests.mlx 18-Nov-2020 09:06:44]
+----------------------Begining storeManyBacktests.mlx 18-Nov-2020 09:10:08]
+----------------------Begining storeManyBacktests.mlx 18-Nov-2020 09:10:52]
+----------------------Begining storeManyBacktests.mlx 18-Nov-2020 09:13:43]
+----------------------Begining storeManyBacktests.mlx 18-Nov-2020 09:15:54]
+ERROR! RETURNS DATA MISSING FOR cash
+FATAL ERROR in MATLAB:table:UnrecognizedVarName! Unrecognized table variable name 'SP500'.
+----------------------Begining storeManyBacktests.mlx 18-Nov-2020 09:16:34]
+ERROR! RETURNS DATA MISSING FOR cash
+FATAL ERROR in MATLAB:table:UnrecognizedVarName! Unrecognized table variable name 'SP500'.
+MISSING ID overdraft
+ERROR! RETURNS DATA MISSING FOR overdraft
+FATAL ERROR in MATLAB:table:UnrecognizedVarName! Unrecognized table variable name 'SP500'.
+----------------------Begining storeManyBacktests.mlx 18-Nov-2020 09:34:20]
+ERROR! RETURNS DATA MISSING FOR cash
+MISSING ID overdraft
+ERROR! RETURNS DATA MISSING FOR overdraft

@@ -168,9 +168,11 @@ classdef backtestStrategy <  matlab.mixin.Heterogeneous
         ManagementFeeDate
         IncentiveFeeDate
         HighWatermark
-        HurdleFeeFreq
+        
+        HurdleFeeDate
         Hurdle
         HurdleFeeRate
+        HurdleWatermark
 
     end
     
@@ -201,11 +203,14 @@ classdef backtestStrategy <  matlab.mixin.Heterogeneous
             %ip.addParameter('IncentiveFeeFreq', 0);
             ip.addParameter('ManagementFeeDate', []);
             ip.addParameter('IncentiveFeeDate', []);
-
+            ip.addParameter('HurdleFeeDate', []);
+            
             ip.addParameter('HighWatermark', 0);
-            ip.addParameter('HurdleFeeFreq', 0);
+            %ip.addParameter('HurdleFeeFreq', 0);
+            
             ip.addParameter('Hurdle', 0);
             ip.addParameter('HurdleFeeRate', 0);
+            ip.addParameter('HurdleWatermark', 0);
             
             
             
@@ -226,9 +231,13 @@ classdef backtestStrategy <  matlab.mixin.Heterogeneous
             obj.IncentiveFeeDate = result.IncentiveFeeDate;
 
             obj.HighWatermark = result.HighWatermark;
-            obj.HurdleFeeFreq = result.HurdleFeeFreq;
+            %obj.HurdleFeeFreq = result.HurdleFeeFreq;
+            
             obj.Hurdle = result.Hurdle;
             obj.HurdleFeeRate = result.HurdleFeeRate;
+            obj.HurdleFeeDate = result.HurdleFeeDate;
+            obj.HurdleWatermark = result.HurdleWatermark;
+            
 
         end
         
@@ -322,7 +331,21 @@ classdef backtestStrategy <  matlab.mixin.Heterogeneous
             validateattributes(value,"numeric","scalar",mfilename,"IncentiveFeeRate");
             obj.IncentiveFeeRate = value;
         end
-
+        
+        function obj = set.HurdleFeeDate(obj,value)
+            % Must be a datetime vector
+            if ~isempty(value)
+                validateattributes(value,"datetime","vector",mfilename,"HurdleFeeDate");
+            
+                if ~all(isbusday(value))
+                    error(message('finance:backtest:InvalidManagementFeeDate Not Business Days'));
+                else
+                    obj.HurdleFeeDate = value;
+                end
+            else
+                obj.HurdleFeeDate = value;
+            end
+        end
         
         
         function obj = set.TransactionCosts(obj,value)
@@ -416,17 +439,21 @@ classdef backtestStrategy <  matlab.mixin.Heterogeneous
             
         end
         
-        function [AboveHurdleCost, UpdateLastPosition] = computePerformanceCost(obj, boolHurdle, currPortVal, updatelastposition)
+        function [AboveHurdleCost, HurdleHighWatermark, UpdateLastPosition, HurdlePosition] = computePerformanceCost(obj, updatehighwatermark, prevHurdlePosition, currentHurdlePosition, updatelastposition, currPortVal)
             AboveHurdleCost = 0;
             currPortTotalVal = sum(currPortVal);
             UpdateLastPosition = updatelastposition;
-            currReturn = (currPortTotalVal - UpdateLastPosition) /  UpdateLastPosition;
-            if currReturn > obj.Hurdle
-                AboveHurdleCost = (currReturn - obj.Hurdle) * UpdateLastPosition * obj.HurdleFeeRate;
-                if boolHurdle
-                    UpdateLastPosition = currPortTotalVal;
+            UpdateHighWatermark = updatehighwatermark;
+            currReturn = (currPortTotalVal - UpdateLastPosition) /  UpdateLastPosition - 1;
+            hurdleReturn = (currentHurdlePosition - prevHurdlePosition) / prevHurdlePosition - 1;
+            if currReturn > hurdleReturn
+                if currPortTotalVal > UpdateHighWatermark
+                    AboveHurdleCost = (currPortTotalVal - updatehighwatermark) * obj.HurdleFeeRate;
+                    HurdleHighWatermark = currPortTotalVal;
                 end
             end
+            UpdateLastPosition = currPortTotalVal;
+            HurdlePosition = currentHurdlePosition;
         end
         
         function [IncentiveCost,Update_HighWaterMark] = computeIncentiveCost(obj, highwatermark,bool_hwm, currPortVal,Mfee,NextIncFeeDate,PrevIncFeeDate)
